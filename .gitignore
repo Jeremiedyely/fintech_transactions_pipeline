@@ -1,0 +1,14 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Virtual environment
+venv/
+
+# Ignore ONLY the 2 huge CSV files (too big for GitHub)
+data/raw/fraudTrain.csv
+data/processed/fraudTrain_cleaned.csv
+
+# Jupyter notebook checkpoints
+.ipynb_checkpoints/
+

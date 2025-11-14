@@ -1,0 +1,15 @@
+merchant_category,total_spent,transaction_count,average_transaction_amount
+Grocery Pos,12068946.64,102448,117.81
+Shopping Pos,7776134.53,97422,79.82
+Shopping Net,7188193.18,81545,88.15
+Gas Transport,6950010.73,109559,63.44
+Home,5926147.98,102017,58.09
+Kids Pets,5419440.59,94003,57.65
+Entertainment,5051065.65,78498,64.35
+Misc Net,4297069.05,52924,81.19
+Misc Pos,4196373.92,66191,63.4
+Food Dining,3898073.71,76328,51.07
+Health Fitness,3869391.64,71639,54.01
+Personal Care,3626651.92,75752,47.88
+Travel,3606458.06,33888,106.42
+Grocery Net,2043363.0,38093,53.64
