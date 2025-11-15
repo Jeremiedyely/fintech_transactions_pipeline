@@ -1,4 +1,3 @@
-#Extract raw data
 import pandas as pd
 
 df = pd.read_csv("C:/Users/jerem/fintech_transactions_pipeline/data/raw/fraudTrain.csv")
