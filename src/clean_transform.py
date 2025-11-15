@@ -2,8 +2,6 @@ import pandas as pd
 
 df = pd.read_csv("C:/Users/jerem/fintech_transactions_pipeline/data/raw/fraudTrain.csv")
 
-# Clean data — fix column names and split date and time.
-
 df = df.drop(columns=["Unnamed: 0"])
 df.columns = df.columns.str.strip().str.replace(" ", "_").str.lower()
 df["trans_date_trans_time"] = pd.to_datetime(df["trans_date_trans_time"])
@@ -62,7 +60,6 @@ column_order = [
 
 df = df[column_order]
 
-# Clean + mask card numbers (preserve zeros; privacy-safe)
 df["credit_card_number"] = df["credit_card_number"].astype(str)
 df["credit_card_number"] = df["credit_card_number"].str.replace(
     r"\D", "", regex=True
@@ -74,7 +71,6 @@ df["masked_card"] = df["credit_card_number"].apply(
 df["credit_card_number"] = df["masked_card"]
 df = df.drop(columns=["masked_card"])
 
-# Short summary (no full numbers printed)
 valid_count = df["valid_length"].sum()
 invalid_count = (~df["valid_length"]).sum()
 total = len(df)
@@ -107,8 +103,6 @@ df["merchant_category"] = (
     .str.strip()
     .str.title()
 )
-
-# Clean first_name and last_name columns
 df["first_name"] = (
     df["first_name"]
     .astype(str)
@@ -126,8 +120,6 @@ df["last_name"] = (
     .str.strip()
     .str.title()
 )
-
-# Clean and normalize job titles
 df["job"] = (
     df["job"]
     .astype(str)
@@ -136,8 +128,6 @@ df["job"] = (
     .str.strip()                                  
     .str.title()                                  
 )
-
-# Clean street_address column
 df["street_address"] = (
     df["street_address"]
     .astype(str)                                 
@@ -146,8 +136,6 @@ df["street_address"] = (
     .str.strip()                                 
     .str.title()                                
 )
-
-# Clean city column — remove invalid characters, fix spacing, and standardize casing.
 df["city"] = (
     df["city"]
     .astype(str)
@@ -156,8 +144,6 @@ df["city"] = (
     .str.strip()
     .str.title()
 )
-
-# Replace missing or empty city values with a consistent label.
 df["city"] = df["city"].replace("", pd.NA).fillna("Unknown City")
 
 df["state"] = (
@@ -189,8 +175,6 @@ df.loc[
 
 df.loc[df["city"] == "Unknown City", "city_population"] = pd.NA
 
-# Clean merchant_latitude column Convert to numeric and remove invalid geolocation values.
-
 df["merchant_latitude"] = pd.to_numeric(df["merchant_latitude"], errors="coerce")
 
 df.loc[
@@ -199,7 +183,6 @@ df.loc[
     "merchant_latitude"
 ] = pd.NA
 
-# Clean merchant_longitude column Convert to numeric and enforce valid longitude range.
 df["merchant_longitude"] = pd.to_numeric(df["merchant_longitude"], errors="coerce")
 
 df.loc[
@@ -208,7 +191,6 @@ df.loc[
     "merchant_longitude"
 ] = pd.NA
 
-# Clean transaction_id column Normalize text, remove invalid characters, ensure consistent key formatting.
 df["transaction_id"] = (
     df["transaction_id"]
     .astype(str)
@@ -219,7 +201,6 @@ df["transaction_id"] = (
 df["transaction_id"] = df["transaction_id"].replace("", pd.NA)
 df["transaction_id"] = df["transaction_id"].astype("string") #
 
-# Clean transaction_amount column Convert to numeric, remove invalid values, and create BI-friendly buckets.
 df["transaction_amount"] = pd.to_numeric(df["transaction_amount"], errors="coerce")
 df.loc[
     (df["transaction_amount"] <= 0) |
@@ -227,21 +208,18 @@ df.loc[
     "transaction_amount"
 ] = pd.NA
 
-# Clean transaction_date column Convert to datetime format for BI time-series analysis.
 df["transaction_date"] = pd.to_datetime(
     df["transaction_date"],
     format="%m/%d/%Y",
     errors="coerce"
 )
 
-# Clean transaction_time column Convert to Python time format and extract hour for BI analysis.
 df["transaction_time"] = pd.to_datetime(
     df["transaction_time"],
     format="%H:%M:%S",
     errors="coerce"
 ).dt.time
 
-# Clean unix_timestamp column Convert to numeric and validate range.
 df["unix_timestamp"] = pd.to_numeric(df["unix_timestamp"], errors="coerce")
 
 df.loc[
@@ -250,25 +228,19 @@ df.loc[
     "unix_timestamp",
 ] = pd.NA
 
-# Convert unix_timestamp to precise datetime.Create human-readable unix_datetime from raw UNIX seconds.
 df["unix_datetime"] = pd.to_datetime(
     df["unix_timestamp"],
     unit="s",
     errors="coerce",
 )
 
-# Sort rows by card and time before computing differences.Order transactions per card chronologically.
 df = df.sort_values(["credit_card_number", "unix_datetime"])
-
-# Calculate seconds since last transaction (per card).Compute time gaps between consecutive swipes for each card.
 df["seconds_since_last_txn"] = (
     df.groupby("credit_card_number")["unix_datetime"]
     .diff()
     .dt.total_seconds()
 )
 df = df.drop(columns=["unix_datetime"])
-
-# Clean gender column. Action: Standardize values to M, F, or Unknown.
 
 df["gender"] = (
     df["gender"]
@@ -277,7 +249,6 @@ df["gender"] = (
     .str.lower()
 )
 
-# Map common variants to standard categories
 gender_map = {
     "m": "M",
     "male": "M",
@@ -287,7 +258,6 @@ gender_map = {
 
 df["gender"] = df["gender"].map(gender_map).fillna("Unknown")
 
-# Clean is_fraud column. Convert to numeric 0/1 and enforce binary values.
 df["is_fraud"] = pd.to_numeric(df["is_fraud"], errors="coerce")
 df.loc[~df["is_fraud"].isin([0, 1]), "is_fraud"] = pd.NA
 df["is_fraud"] = df["is_fraud"].astype("Int64")
@@ -297,7 +267,6 @@ df["transaction_amount_missing"] = df["transaction_amount"].isna()
 df["latlong_missing"] = df["latitude"].isna() | df["longitude"].isna()
 df["seconds_since_last_txn_missing"] = df["seconds_since_last_txn"].isna()
 
-# Reorder columns for better organization
 column_order = [
     'credit_card_number', 'first_name', 'last_name', 'gender', 'date_of_birth', 'job',
     'street_address', 'city', 'state', 'zip_code', 'latitude', 'longitude', 'city_population',
